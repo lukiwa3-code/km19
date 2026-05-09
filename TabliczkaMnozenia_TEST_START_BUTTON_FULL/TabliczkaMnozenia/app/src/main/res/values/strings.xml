@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tabliczka Mnożenia</string>
+    <string name="app_name">Tabliczka Mnożenia do 100</string>
 
     <!-- TESTOWE ID AdMob od Google. Na tym nie zarabiasz. -->
     <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
