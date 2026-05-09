@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Tabliczka Mnożenia</string>
+
+    <!-- TESTOWE ID AdMob od Google. Na tym nie zarabiasz. -->
+    <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+
+    <!-- TESTOWE ID reklamy banerowej od Google. -->
+    <string name="admob_banner_id">ca-app-pub-3940256099942544/9214589741</string>
+
+    <!-- TESTOWE ID reklamy pełnoekranowej (interstitial) od Google. -->
+    <string name="admob_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
+</resources>
