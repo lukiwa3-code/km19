@@ -1,0 +1,79 @@
+name: Build Release AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-release:
+    name: Build signed release AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pobierz pliki z repozytorium
+        uses: actions/checkout@v4
+
+      - name: Ustaw Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Ustaw Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'tools platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Ustaw Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.4.1
+
+      - name: Znajdź folder projektu Android
+        shell: bash
+        run: |
+          PROJECT_FILE=$(find . -name "settings.gradle" -not -path "./.git/*" | head -n 1)
+
+          if [ -z "$PROJECT_FILE" ]; then
+            echo "Nie znaleziono settings.gradle."
+            echo "Pliki znalezione w repozytorium:"
+            find . -maxdepth 6 -type f -not -path "./.git/*" | sort
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$PROJECT_FILE")
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
+          echo "Znaleziono projekt Android w folderze: $PROJECT_DIR"
+
+      - name: Odtwórz keystore z sekretu
+        shell: bash
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > upload-keystore.jks
+          echo "KEYSTORE_PATH=$PWD/upload-keystore.jks" >> "$GITHUB_ENV"
+
+      - name: Zbuduj podpisany AAB
+        shell: bash
+        run: |
+          cd "$PROJECT_DIR"
+
+          gradle :app:bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$KEYSTORE_PATH" \
+            -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -Pandroid.injected.signing.key.alias="${{ secrets.ANDROID_KEY_ALIAS }}" \
+            -Pandroid.injected.signing.key.password="${{ secrets.ANDROID_KEY_PASSWORD }}"
+
+      - name: Skopiuj AAB do folderu output
+        shell: bash
+        run: |
+          mkdir -p output
+          cp "$PROJECT_DIR"/app/build/outputs/bundle/release/*.aab output/TabliczkaMnozenia-release.aab
+          ls -lh output
+
+      - name: Zapisz AAB do pobrania
+        uses: actions/upload-artifact@v4
+        with:
+          name: TabliczkaMnozenia-release-aab
+          path: output/TabliczkaMnozenia-release.aab
+          if-no-files-found: error
